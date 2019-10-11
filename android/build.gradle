@@ -1,4 +1,4 @@
-group 'com.example.quick_scan'
+group 'io.woodemi.quick_scan'
 version '1.0-SNAPSHOT'
 
 buildscript {
