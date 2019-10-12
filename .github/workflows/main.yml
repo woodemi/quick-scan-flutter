@@ -23,6 +23,13 @@ jobs:
     steps:
       - uses: actions/checkout@v1
       - uses: subosito/flutter-action@v1
+      - name: Prepare iOS App Signing
+        env:
+          GITLAB_KEYSTORE_TOKEN: ${{ secrets.GITLAB_KEYSTORE_TOKEN }}
+          MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
+        run: |
+          fastlane run setup_ci force:true
+          fastlane match
       - name: CocoaPods setup workaround
         # CocoaPods 1.8.0 pre-installed according to https://help.github.com/en/articles/software-in-virtual-environments-for-github-actions#macos-1014
         # CocoaPods 1.7.x required for flutter-1.9.1 according to https://github.com/flutter/flutter/issues/41253
@@ -30,4 +37,4 @@ jobs:
           sudo gem uninstall cocoapods
           sudo gem install cocoapods -v 1.7.5
           pod setup
-      - run: cd example && flutter build ios --no-codesign
+      - run: cd example && flutter build ios

@@ -1,0 +1,14 @@
+git_url("https://gitlab-ci-token:#{ENV['GITLAB_KEYSTORE_TOKEN']}@gitlab.com/woodemi-dev/apple-dev-certificates.git")
+
+storage_mode("git")
+
+type("adhoc")
+
+app_identifier("io.woodemi.example.*")
+
+readonly true
+
+# For all available options run `fastlane match --help`
+# Remove the # in the beginning of the line to enable the other options
+
+# The docs are available on https://docs.fastlane.tools/actions/match
