@@ -1,0 +1,15 @@
+name: Main
+
+on: push
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v1
+      - uses: subosito/flutter-action@v1
+      - run: cd example && flutter build apk
