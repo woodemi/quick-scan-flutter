@@ -14,7 +14,7 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/quick_scan/ios"
 
 SPEC CHECKSUMS:
-  Flutter: 0e3d915762c693b495b44d77113d4970485de6ec
+  Flutter: 58dd7d1b27887414a370fcccb9e645c08ffd7a6a
   quick_scan: 2c148e3656c475a4f9e19a011ec4ac5e642f508d
 
 PODFILE CHECKSUM: 64b2109b760ac9073c864e2a8278e6464efaa219
