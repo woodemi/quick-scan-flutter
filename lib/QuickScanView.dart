@@ -11,6 +11,10 @@ class QuickScanView extends StatelessWidget {
       return AndroidView(
         viewType: scanViewType,
       );
+    } else if (Platform.isIOS) {
+      return UiKitView(
+        viewType: scanViewType,
+      );
     }
     throw UnimplementedError('Unknown platform: ${Platform.operatingSystem}');
   }
