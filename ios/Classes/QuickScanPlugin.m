@@ -1,16 +1,10 @@
 #import "QuickScanPlugin.h"
+#import "ScanViewFactory.h"
 
 @implementation QuickScanPlugin
 + (void)registerWithRegistrar:(NSObject <FlutterPluginRegistrar> *)registrar {
-    FlutterMethodChannel *channel = [FlutterMethodChannel
-            methodChannelWithName:@"quick_scan"
-                  binaryMessenger:[registrar messenger]];
-    QuickScanPlugin *instance = [[QuickScanPlugin alloc] init];
-    [registrar addMethodCallDelegate:instance channel:channel];
-}
-
-- (void)handleMethodCall:(FlutterMethodCall *)call result:(FlutterResult)result {
-    result(FlutterMethodNotImplemented);
+    ScanViewFactory *scanViewFactory = [ScanViewFactory initWithMessenger:registrar.messenger];
+    [registrar registerViewFactory:scanViewFactory withId:@"scan_view"];
 }
 
 @end
