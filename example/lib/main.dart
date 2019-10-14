@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:quick_scan/QuickScanView.dart';
 
 void main() => runApp(MyApp());
 
@@ -16,7 +17,7 @@ class _MyAppState extends State<MyApp> {
           title: const Text('Plugin example app'),
         ),
         body: Center(
-          child: Text('Plugin example app'),
+          child: QuickScanView(),
         ),
       ),
     );
