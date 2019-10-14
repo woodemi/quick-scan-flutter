@@ -125,7 +125,11 @@
 
 #pragma mark - AVCaptureMetadataOutputObjectsDelegate
 - (void)captureOutput:(AVCaptureOutput *)captureOutput didOutputMetadataObjects:(NSArray<AVMetadataMachineReadableCodeObject *> *)metadataObjects fromConnection:(AVCaptureConnection *)connection{
-   //   TOOD result
+    if (metadataObjects.count == 0) {
+        return;
+    }
+    NSString *result = [metadataObjects.firstObject stringValue];
+    NSLog(@"识别result = %@", result);    //  TODO：传给flutter
 }
 
 @end
