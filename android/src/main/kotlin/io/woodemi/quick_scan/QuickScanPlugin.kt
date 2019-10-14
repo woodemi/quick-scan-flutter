@@ -1,21 +1,13 @@
 package io.woodemi.quick_scan
 
-import io.flutter.plugin.common.MethodCall
-import io.flutter.plugin.common.MethodChannel
-import io.flutter.plugin.common.MethodChannel.MethodCallHandler
-import io.flutter.plugin.common.MethodChannel.Result
 import io.flutter.plugin.common.PluginRegistry.Registrar
 
-class QuickScanPlugin : MethodCallHandler {
+class QuickScanPlugin {
     companion object {
         @JvmStatic
         fun registerWith(registrar: Registrar) {
-            val channel = MethodChannel(registrar.messenger(), "quick_scan")
-            channel.setMethodCallHandler(QuickScanPlugin())
+            val scanViewFactory = ScanViewFactory(registrar.messenger())
+            registrar.platformViewRegistry().registerViewFactory("scan_view", scanViewFactory)
         }
-    }
-
-    override fun onMethodCall(call: MethodCall, result: Result) {
-        result.notImplemented()
     }
 }
