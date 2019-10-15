@@ -48,6 +48,7 @@ class ScanView(context: Context, messenger: BinaryMessenger, id: Int, params: Ma
 
     override fun dispose() {
         lifecycleRegistry.markState(Lifecycle.State.DESTROYED)
+        CameraX.unbindAll()
     }
 
     override fun onListen(arguments: Any?, eventSink: EventChannel.EventSink?) {
@@ -123,7 +124,7 @@ class ScanView(context: Context, messenger: BinaryMessenger, id: Int, params: Ma
 
             try {
                 val result = reader.decode(binaryBitmap)
-                scanResultSink?.success(result.text)
+                textureView.post { scanResultSink?.success(result.text) }
             } catch (e: NotFoundException) {
                 // Empty
             }
