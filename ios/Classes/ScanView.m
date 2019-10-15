@@ -1,7 +1,7 @@
 #import "ScanView.h"
 #import <AVFoundation/AVFoundation.h>
 
-@interface ScanView ()
+@interface ScanView () <AVCaptureMetadataOutputObjectsDelegate>
 @property(nonatomic, strong) UIView *preview;
 @property(nonatomic, strong) AVCaptureVideoPreviewLayer *previewLayer;
 @property(nonatomic, strong) AVCaptureMetadataOutput *metadataOutput;
@@ -56,5 +56,15 @@
     if (self.session.isRunning) {
         [self.session stopRunning];
     }
+}
+
+#pragma mark - AVCaptureMetadataOutputObjectsDelegate
+
+- (void)captureOutput:(AVCaptureOutput *)captureOutput didOutputMetadataObjects:(NSArray<AVMetadataMachineReadableCodeObject *> *)metadataObjects fromConnection:(AVCaptureConnection *)connection {
+    if (metadataObjects.count == 0) {
+        return;
+    }
+    NSString *result = [metadataObjects.firstObject stringValue];
+    NSLog(@"captureOutput:didOutputMetadataObjects:fromConnection %@", result);
 }
 @end
