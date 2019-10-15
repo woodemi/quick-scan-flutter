@@ -31,7 +31,6 @@
 - (void)initMetadataOutput {
     self.metadataOutput = [AVCaptureMetadataOutput new];
     [self.metadataOutput setMetadataObjectsDelegate:self queue:dispatch_get_main_queue()];
-    self.metadataOutput.metadataObjectTypes = @[AVMetadataObjectTypeQRCode];
     self.metadataOutput.rectOfInterest = [self.previewLayer metadataOutputRectOfInterestForRect:self.previewLayer.bounds];
 }
 
@@ -42,6 +41,8 @@
     [self.session addInput:[AVCaptureDeviceInput deviceInputWithDevice:backCamera error:&e]];
     [self.previewLayer setSession:self.session];
     [self.session addOutput:self.metadataOutput];
+    // https://stackoverflow.com/questions/26244714/avfoundation-metadata-object-types
+    self.metadataOutput.metadataObjectTypes = @[AVMetadataObjectTypeQRCode];
 
     [self.session setSessionPreset:AVCaptureSessionPresetHigh];
     [self.session startRunning];
