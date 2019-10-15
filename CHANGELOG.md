@@ -1,3 +1,3 @@
-## 0.0.1
+## 0.1.0 -- 2019.10.15
 
-* TODO: Describe initial release.
+- Add ScanView & ScanResultCallback
