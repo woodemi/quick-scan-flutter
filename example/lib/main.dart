@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:quick_scan/ScanView.dart';
+import 'package:quick_scan/quick_scan.dart';
 
 void main() => runApp(MyApp());
 
