@@ -3,14 +3,14 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'quick_scan'
-  s.version          = '0.0.1'
+  s.version          = '0.1.0'
   s.summary          = 'A new flutter plugin project.'
   s.description      = <<-DESC
 A new flutter plugin project.
                        DESC
-  s.homepage         = 'http://example.com'
+  s.homepage         = 'http://woodemi.com'
   s.license          = { :file => '../LICENSE' }
-  s.author           = { 'Your Company' => 'email@example.com' }
+  s.author           = { 'Woodemi Co,. Ltd' => 'woodemi-dev@woodemi.com' }
   s.source           = { :path => '.' }
   s.source_files = 'Classes/**/*'
   s.public_header_files = 'Classes/**/*.h'

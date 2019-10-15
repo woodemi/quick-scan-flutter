@@ -1,2 +1,5 @@
-<manifest package="io.woodemi.quick_scan">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="io.woodemi.quick_scan">
+
+    <uses-permission android:name="android.permission.CAMERA" />
 </manifest>
