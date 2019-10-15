@@ -15,10 +15,13 @@ import androidx.lifecycle.LifecycleRegistry
 import com.google.zxing.*
 import com.google.zxing.common.HybridBinarizer
 import io.flutter.plugin.common.BinaryMessenger
+import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.platform.PlatformView
 import java.nio.ByteBuffer
 
-class ScanView(context: Context, messenger: BinaryMessenger, id: Int, params: Map<String, Any>?) : PlatformView, LifecycleOwner {
+class ScanView(context: Context, messenger: BinaryMessenger, id: Int, params: Map<String, Any>?) : PlatformView, EventChannel.StreamHandler, LifecycleOwner {
+    private var scanResultSink: EventChannel.EventSink? = null
+
     private var rational: Rational
     private var size: Size
     private val textureView = TextureView(context)
@@ -26,6 +29,8 @@ class ScanView(context: Context, messenger: BinaryMessenger, id: Int, params: Ma
     private val lifecycleRegistry: LifecycleRegistry
 
     init {
+        EventChannel(messenger, "quick_scan/scanview_$id/event").setStreamHandler(this)
+
         rational = Rational(1, 1)
         size = Size(640, 640)
         val preview = buildPreviewUseCase()
@@ -43,6 +48,14 @@ class ScanView(context: Context, messenger: BinaryMessenger, id: Int, params: Ma
 
     override fun dispose() {
         lifecycleRegistry.markState(Lifecycle.State.DESTROYED)
+    }
+
+    override fun onListen(arguments: Any?, eventSink: EventChannel.EventSink?) {
+        scanResultSink = eventSink
+    }
+
+    override fun onCancel(arguments: Any?) {
+        scanResultSink = null
     }
 
     override fun getLifecycle(): Lifecycle = lifecycleRegistry
@@ -84,7 +97,7 @@ class ScanView(context: Context, messenger: BinaryMessenger, id: Int, params: Ma
         return analyzerUseCase
     }
 
-    private class QRCodeAnalyzer : ImageAnalysis.Analyzer {
+    private inner class QRCodeAnalyzer : ImageAnalysis.Analyzer {
         private val reader = MultiFormatReader().apply {
             setHints(mapOf(DecodeHintType.POSSIBLE_FORMATS to listOf(BarcodeFormat.QR_CODE)))
         }
@@ -110,9 +123,9 @@ class ScanView(context: Context, messenger: BinaryMessenger, id: Int, params: Ma
 
             try {
                 val result = reader.decode(binaryBitmap)
-                println("QRCode analyze: $result")
-            } catch (e: Exception) {
-                println("QRCode error: $e")
+                scanResultSink?.success(result.text)
+            } catch (e: NotFoundException) {
+                // Empty
             }
         }
 

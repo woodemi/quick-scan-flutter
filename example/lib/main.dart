@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:quick_scan/QuickScanView.dart';
+import 'package:quick_scan/ScanView.dart';
 
 void main() => runApp(MyApp());
 
@@ -34,7 +34,7 @@ class _MyAppState extends State<MyApp> {
             ),
           ],
         ),
-        body: permitted ?? false ? QuickScanView() : Container(),
+        body: buildBody(),
       ),
     );
   }
@@ -47,5 +47,16 @@ class _MyAppState extends State<MyApp> {
         throw Exception('Permission Denied');
       }
     }
+  }
+
+  Widget buildBody() {
+    if (!permitted)
+      return Container();
+
+    return ScanView(
+      callback: (String result) {
+        print('scanResult $result');
+      },
+    );
   }
 }
