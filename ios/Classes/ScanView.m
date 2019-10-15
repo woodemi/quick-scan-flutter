@@ -1,7 +1,8 @@
 #import "ScanView.h"
 #import <AVFoundation/AVFoundation.h>
 
-@interface ScanView () <AVCaptureMetadataOutputObjectsDelegate>
+@interface ScanView () <FlutterStreamHandler, AVCaptureMetadataOutputObjectsDelegate>
+@property(nonatomic, strong) FlutterEventSink scanResultSink;
 @property(nonatomic, strong) UIView *preview;
 @property(nonatomic, strong) AVCaptureVideoPreviewLayer *previewLayer;
 @property(nonatomic, strong) AVCaptureMetadataOutput *metadataOutput;
@@ -11,6 +12,8 @@
 @implementation ScanView
 + (instancetype)initWithMessenger:(NSObject <FlutterBinaryMessenger> *)messenger viewIdentifier:(int64_t)viewId {
     ScanView *scanView = [ScanView new];
+    NSString *eventChannelName = [@"quick_scan" stringByAppendingFormat:@"/scanview_%lld/event", viewId];
+    [[FlutterEventChannel eventChannelWithName:eventChannelName binaryMessenger:messenger] setStreamHandler:scanView];
     [scanView initPreview];
     [scanView initMetadataOutput];
     [scanView initSession];
@@ -59,13 +62,23 @@
     }
 }
 
+#pragma mark - FlutterStreamHandler
+
+- (FlutterError *_Nullable)onListenWithArguments:(id _Nullable)arguments eventSink:(FlutterEventSink)events {
+    self.scanResultSink = events;
+    return nil;
+}
+
+- (FlutterError *_Nullable)onCancelWithArguments:(id _Nullable)arguments {
+    self.scanResultSink = nil;
+    return nil;
+}
+
 #pragma mark - AVCaptureMetadataOutputObjectsDelegate
 
 - (void)captureOutput:(AVCaptureOutput *)captureOutput didOutputMetadataObjects:(NSArray<AVMetadataMachineReadableCodeObject *> *)metadataObjects fromConnection:(AVCaptureConnection *)connection {
-    if (metadataObjects.count == 0) {
-        return;
+    if (metadataObjects.count >= 0 && self.scanResultSink) {
+        self.scanResultSink([metadataObjects.firstObject stringValue]);
     }
-    NSString *result = [metadataObjects.firstObject stringValue];
-    NSLog(@"captureOutput:didOutputMetadataObjects:fromConnection %@", result);
 }
 @end
