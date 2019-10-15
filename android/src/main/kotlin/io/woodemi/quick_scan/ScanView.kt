@@ -48,6 +48,7 @@ class ScanView(context: Context, messenger: BinaryMessenger, id: Int, params: Ma
 
     override fun dispose() {
         lifecycleRegistry.markState(Lifecycle.State.DESTROYED)
+        CameraX.unbindAll()
     }
 
     override fun onListen(arguments: Any?, eventSink: EventChannel.EventSink?) {
