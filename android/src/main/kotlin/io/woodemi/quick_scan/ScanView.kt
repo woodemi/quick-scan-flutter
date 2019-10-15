@@ -123,7 +123,7 @@ class ScanView(context: Context, messenger: BinaryMessenger, id: Int, params: Ma
 
             try {
                 val result = reader.decode(binaryBitmap)
-                scanResultSink?.success(result.text)
+                textureView.post { scanResultSink?.success(result.text) }
             } catch (e: NotFoundException) {
                 // Empty
             }
