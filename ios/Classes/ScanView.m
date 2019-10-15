@@ -4,6 +4,7 @@
 @interface ScanView ()
 @property(nonatomic, strong) UIView *preview;
 @property(nonatomic, strong) AVCaptureVideoPreviewLayer *previewLayer;
+@property(nonatomic, strong) AVCaptureMetadataOutput *metadataOutput;
 @property(nonatomic, strong) AVCaptureSession *session;
 @end
 
@@ -11,6 +12,7 @@
 + (instancetype)initWithMessenger:(NSObject <FlutterBinaryMessenger> *)messenger viewIdentifier:(int64_t)viewId {
     ScanView *scanView = [ScanView new];
     [scanView initPreview];
+    [scanView initMetadataOutput];
     [scanView initSession];
     return scanView;
 }
@@ -26,12 +28,20 @@
     [self.preview.layer addSublayer:self.previewLayer];
 }
 
+- (void)initMetadataOutput {
+    self.metadataOutput = [AVCaptureMetadataOutput new];
+    [self.metadataOutput setMetadataObjectsDelegate:self queue:dispatch_get_main_queue()];
+    self.metadataOutput.metadataObjectTypes = @[AVMetadataObjectTypeQRCode];
+    self.metadataOutput.rectOfInterest = [self.previewLayer metadataOutputRectOfInterestForRect:self.previewLayer.bounds];
+}
+
 - (void)initSession {
     self.session = [AVCaptureSession new];
     AVCaptureDevice *backCamera = [AVCaptureDevice defaultDeviceWithDeviceType:AVCaptureDeviceTypeBuiltInWideAngleCamera mediaType:AVMediaTypeVideo position:AVCaptureDevicePositionBack];
     NSError *e;
     [self.session addInput:[AVCaptureDeviceInput deviceInputWithDevice:backCamera error:&e]];
     [self.previewLayer setSession:self.session];
+    [self.session addOutput:self.metadataOutput];
 
     [self.session setSessionPreset:AVCaptureSessionPresetHigh];
     [self.session startRunning];
