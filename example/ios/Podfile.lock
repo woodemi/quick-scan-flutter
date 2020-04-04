@@ -2,17 +2,17 @@ PODS:
   - Flutter (1.0.0)
   - permission_handler (3.2.2):
     - Flutter
-  - quick_scan (0.0.1):
+  - quick_scan (0.1.0):
     - Flutter
 
 DEPENDENCIES:
-  - Flutter (from `.symlinks/flutter/ios`)
+  - Flutter (from `Flutter`)
   - permission_handler (from `.symlinks/plugins/permission_handler/ios`)
   - quick_scan (from `.symlinks/plugins/quick_scan/ios`)
 
 EXTERNAL SOURCES:
   Flutter:
-    :path: ".symlinks/flutter/ios"
+    :path: Flutter
   permission_handler:
     :path: ".symlinks/plugins/permission_handler/ios"
   quick_scan:
@@ -21,8 +21,8 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   Flutter: 0e3d915762c693b495b44d77113d4970485de6ec
   permission_handler: d59f41439f5bc6c4d1005f3355e98f05ddc68ece
-  quick_scan: 2c148e3656c475a4f9e19a011ec4ac5e642f508d
+  quick_scan: 7cef951bdba9b1b43ca26c42b10b77b8041bd2de
 
-PODFILE CHECKSUM: 64b2109b760ac9073c864e2a8278e6464efaa219
+PODFILE CHECKSUM: 3dbe063e9c90a5d7c9e4e76e70a821b9e2c1d271
 
-COCOAPODS: 1.7.1
+COCOAPODS: 1.8.4
