@@ -2,13 +2,12 @@ package io.woodemi.quick_scan
 
 import android.content.Context
 import android.graphics.ImageFormat
-import android.os.Handler
-import android.os.HandlerThread
-import android.util.Rational
 import android.util.Size
-import android.view.TextureView
 import android.view.View
 import androidx.camera.core.*
+import androidx.camera.lifecycle.ProcessCameraProvider
+import androidx.camera.view.PreviewView
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
@@ -18,37 +17,55 @@ import io.flutter.plugin.common.BinaryMessenger
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.platform.PlatformView
 import java.nio.ByteBuffer
+import java.util.concurrent.ExecutorService
+import java.util.concurrent.Executors
+import kotlin.math.abs
+import kotlin.math.max
+import kotlin.math.min
 
 class ScanView(context: Context, messenger: BinaryMessenger, id: Int, params: Map<String, Any>?) : PlatformView, EventChannel.StreamHandler, LifecycleOwner {
     private var scanResultSink: EventChannel.EventSink? = null
 
-    private var rational: Rational
     private var size: Size
-    private val textureView = TextureView(context)
+    private val viewFinder = PreviewView(context)
 
     private val lifecycleRegistry: LifecycleRegistry
 
     init {
         EventChannel(messenger, "quick_scan/scanview_$id/event").setStreamHandler(this)
 
-        rational = Rational(1, 1)
         size = Size(640, 640)
-        val preview = buildPreviewUseCase()
-        val imageAnalysis = buildImageAnalysisUseCase()
 
         lifecycleRegistry = LifecycleRegistry(this)
-        CameraX.bindToLifecycle(this, preview, imageAnalysis)
+
+        val cameraProviderFuture = ProcessCameraProvider.getInstance(viewFinder.context)
+        cameraProviderFuture.addListener(Runnable {
+            val targetAspectRatio = aspectRatio(size.width, size.height)
+            val rotation = viewFinder.display.rotation
+
+            val preview = buildPreviewUseCase(targetAspectRatio, rotation)
+            val imageAnalysis = buildImageAnalysisUseCase(targetAspectRatio, rotation)
+
+            val cameraSelector = CameraSelector.Builder().requireLensFacing(CameraSelector.LENS_FACING_BACK).build()
+            cameraProviderFuture.get().bindToLifecycle(this, cameraSelector, preview, imageAnalysis)
+        }, ContextCompat.getMainExecutor(context))
     }
 
+    /** Blocking camera operations are performed using this executor */
+    private lateinit var cameraExecutor: ExecutorService
+
     override fun getView(): View {
-        if (lifecycleRegistry.currentState < Lifecycle.State.RESUMED)
-            lifecycleRegistry.markState(Lifecycle.State.RESUMED)
-        return textureView
+        if (lifecycleRegistry.currentState < Lifecycle.State.RESUMED) {
+            lifecycleRegistry.currentState = Lifecycle.State.RESUMED
+            // Initialize our background executor
+            cameraExecutor = Executors.newSingleThreadExecutor()
+        }
+        return viewFinder
     }
 
     override fun dispose() {
-        lifecycleRegistry.markState(Lifecycle.State.DESTROYED)
-        CameraX.unbindAll()
+        lifecycleRegistry.currentState = Lifecycle.State.DESTROYED
+        cameraExecutor.shutdown()
     }
 
     override fun onListen(arguments: Any?, eventSink: EventChannel.EventSink?) {
@@ -61,41 +78,32 @@ class ScanView(context: Context, messenger: BinaryMessenger, id: Int, params: Ma
 
     override fun getLifecycle(): Lifecycle = lifecycleRegistry
 
-    private fun buildPreviewUseCase(): Preview {
-        // Create configuration object for the viewfinder use case
-        val previewConfig = PreviewConfig.Builder().apply {
-            setTargetAspectRatio(rational)
-            setTargetResolution(size)
-        }.build()
-
+    private fun buildPreviewUseCase(aspectRatio: Int, rotation: Int): Preview {
         // Build the viewfinder use case
-        val preview = Preview(previewConfig)
+        val preview = Preview.Builder()
+                // We request aspect ratio but no resolution
+                .setTargetAspectRatio(aspectRatio)
+                // Set initial target rotation
+                .setTargetRotation(rotation)
+                .build()
 
-        // Every time the viewfinder is updated, recompute layout
-        preview.setOnPreviewOutputUpdateListener {
-            textureView.surfaceTexture = it.surfaceTexture
-        }
+        // Attach the viewfinder's surface provider to preview use case
+        preview.setSurfaceProvider(viewFinder.previewSurfaceProvider)
         return preview
     }
 
-    private fun buildImageAnalysisUseCase(): ImageAnalysis {
-        // Setup image analysis pipeline that computes average pixel luminance
-        val analyzerConfig = ImageAnalysisConfig.Builder().apply {
-            // Use a worker thread for image analysis to prevent glitches
-            val analyzerThread = HandlerThread(
-                    "QRCodeAnalyzer"
-            ).apply { start() }
-            setCallbackHandler(Handler(analyzerThread.looper))
-            // In our analysis, we care more about the latest image than
-            // analyzing *every* image
-            setImageReaderMode(ImageAnalysis.ImageReaderMode.ACQUIRE_LATEST_IMAGE)
-        }.build()
+    private fun buildImageAnalysisUseCase(aspectRatio: Int, rotation: Int): ImageAnalysis {
+        val imageAnalyzer = ImageAnalysis.Builder()
+                // We request aspect ratio but no resolution
+                .setTargetAspectRatio(aspectRatio)
+                // Set initial target rotation, we will have to call this again if rotation changes
+                // during the lifecycle of this use case
+                .setTargetRotation(rotation)
+                .build()
 
         // Build the image analysis use case and instantiate our analyzer
-        val analyzerUseCase = ImageAnalysis(analyzerConfig).apply {
-            analyzer = QRCodeAnalyzer()
-        }
-        return analyzerUseCase
+        imageAnalyzer.setAnalyzer(cameraExecutor, QRCodeAnalyzer())
+        return imageAnalyzer
     }
 
     private inner class QRCodeAnalyzer : ImageAnalysis.Analyzer {
@@ -103,7 +111,7 @@ class ScanView(context: Context, messenger: BinaryMessenger, id: Int, params: Ma
             setHints(mapOf(DecodeHintType.POSSIBLE_FORMATS to listOf(BarcodeFormat.QR_CODE)))
         }
 
-        override fun analyze(image: ImageProxy, rotationDegrees: Int) {
+        override fun analyze(image: ImageProxy) {
             if (image.format != ImageFormat.YUV_420_888) {
                 println("Unsupported format: ${image.format}")
                 return
@@ -124,10 +132,12 @@ class ScanView(context: Context, messenger: BinaryMessenger, id: Int, params: Ma
 
             try {
                 val result = reader.decode(binaryBitmap)
-                textureView.post { scanResultSink?.success(result.text) }
+                viewFinder.post { scanResultSink?.success(result.text) }
             } catch (e: NotFoundException) {
                 // Empty
             }
+
+            image.close()
         }
 
         private fun ByteBuffer.toByteArray(): ByteArray {
@@ -137,4 +147,26 @@ class ScanView(context: Context, messenger: BinaryMessenger, id: Int, params: Ma
             return data // Return the byte array
         }
     }
+}
+
+private const val RATIO_4_3_VALUE = 4.0 / 3.0
+private const val RATIO_16_9_VALUE = 16.0 / 9.0
+
+/**
+ *  [androidx.camera.core.ImageAnalysisConfig] requires enum value of
+ *  [androidx.camera.core.AspectRatio]. Currently it has values of 4:3 & 16:9.
+ *
+ *  Detecting the most suitable ratio for dimensions provided in @params by counting absolute
+ *  of preview ratio to one of the provided values.
+ *
+ *  @param width - preview width
+ *  @param height - preview height
+ *  @return suitable aspect ratio
+ */
+private fun aspectRatio(width: Int, height: Int): Int {
+    val previewRatio = max(width, height).toDouble() / min(width, height)
+    if (abs(previewRatio - RATIO_4_3_VALUE) <= abs(previewRatio - RATIO_16_9_VALUE)) {
+        return AspectRatio.RATIO_4_3
+    }
+    return AspectRatio.RATIO_16_9
 }
