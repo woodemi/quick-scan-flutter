@@ -1,10 +1,6 @@
 name: quick_scan
 description: A new flutter plugin project.
-version: 0.1.0
-authors:
-  - Wang Kun <wangkun@woodemi.com>
-  - Liu Xiaodong <liuxiaodong@woodemi.com>
-  - Fan Kang <kang.fan@woodemi.com>
+version: 0.1.1
 homepage: http://woodemi.com
 
 environment:
