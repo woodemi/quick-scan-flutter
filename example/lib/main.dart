@@ -50,13 +50,14 @@ class _MyAppState extends State<MyApp> {
   }
 
   Widget buildBody() {
-    if (!permitted)
-      return Container();
-
-    return ScanView(
-      callback: (String result) {
-        print('scanResult $result');
-      },
+    return Center(
+      child: FutureBuilder(
+        future: QuickScan.platformVersion,
+        builder: (context, snapshot) {
+          if (snapshot.hasError || !snapshot.hasData) return Text('err');
+          return Text(snapshot.data);
+        },
+      ),
     );
   }
 }
