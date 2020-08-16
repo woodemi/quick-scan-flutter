@@ -1,12 +1,3 @@
-import 'dart:async';
+library quick_scan;
 
-import 'package:flutter/services.dart';
-
-class QuickScan {
-  static const MethodChannel _channel = const MethodChannel('quick_scan');
-
-  static Future<String> get platformVersion async {
-    final String version = await _channel.invokeMethod('getPlatformVersion');
-    return version;
-  }
-}
+export 'src/ScanView.dart';
