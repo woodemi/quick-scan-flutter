@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
 import 'package:quick_scan/quick_scan.dart';
+
+import 'util/permission.dart' if (dart.library.html) 'util/permission_web.dart';
 
 void main() => runApp(MyApp());
 
@@ -8,8 +9,6 @@ class MyApp extends StatefulWidget {
   @override
   _MyAppState createState() => _MyAppState();
 }
-
-final permissionHandler = PermissionHandler();
 
 class _MyAppState extends State<MyApp> {
   bool permitted = false;
@@ -21,17 +20,7 @@ class _MyAppState extends State<MyApp> {
         appBar: AppBar(
           title: const Text('Plugin example app'),
           actions: <Widget>[
-            FlatButton(
-              child: Text('Scan'),
-              onPressed: () async {
-                try {
-                  await checkAndRequestPermission();
-                  setState(() => permitted = true);
-                } catch (e) {
-                  Scaffold.of(context).showSnackBar(SnackBar(content: Text(e.toString())));
-                }
-              },
-            ),
+            _buildFlatButton(),
           ],
         ),
         body: buildBody(),
@@ -39,19 +28,27 @@ class _MyAppState extends State<MyApp> {
     );
   }
 
-  Future<void> checkAndRequestPermission() async {
-    var permissionStatus = await permissionHandler.checkPermissionStatus(PermissionGroup.camera);
-    if (permissionStatus != PermissionStatus.granted) {
-      var resultMap = await permissionHandler.requestPermissions([PermissionGroup.camera]);
-      if (resultMap[PermissionGroup.camera] != PermissionStatus.granted) {
-        throw Exception('Permission Denied');
-      }
-    }
+  Widget _buildFlatButton() {
+    return Builder(
+      builder: (context) {
+        return FlatButton(
+          child: Text('Scan'),
+          onPressed: () async {
+            try {
+              await checkAndRequestPermission();
+              setState(() => permitted = true);
+            } catch (e) {
+              Scaffold.of(context)
+                  .showSnackBar(SnackBar(content: Text(e.toString())));
+            }
+          },
+        );
+      },
+    );
   }
 
   Widget buildBody() {
-    if (!permitted)
-      return Container();
+    if (!permitted) return Container();
 
     return ScanView(
       callback: (String result) {

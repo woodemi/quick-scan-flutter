@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 
 const scanViewType = 'scan_view';
@@ -36,7 +37,11 @@ class _ScanViewState extends State<ScanView> {
 
   @override
   Widget build(BuildContext context) {
-    if (Platform.isAndroid) {
+    if (kIsWeb) {
+      return HtmlElementView(
+        viewType: scanViewType,
+      );
+    } else if (Platform.isAndroid) {
       return AndroidView(
         viewType: scanViewType,
         onPlatformViewCreated: onPlatformViewCreated,
