@@ -88,7 +88,7 @@ class ScanView(context: Context, messenger: BinaryMessenger, id: Int, params: Ma
                 .build()
 
         // Attach the viewfinder's surface provider to preview use case
-        preview.setSurfaceProvider(viewFinder.createSurfaceProvider())
+        preview.setSurfaceProvider(viewFinder.surfaceProvider)
         return preview
     }
 
