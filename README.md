@@ -1,3 +1,7 @@
+# DEPRECATED
+
+This repo is deprecated; please use the new mono repo https://github.com/woodemi/quick.flutter
+
 # quick_scan
 
 A flutter plugin for scanning QR codes, as quick as adding a `Widget`
